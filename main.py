@@ -175,20 +175,23 @@ def VQA_criterion(batch_pred: torch.Tensor, batch_answers: torch.Tensor):
 # 3. モデルのの実装
 # ResNetを利用できるようにしておく
 def ResNet50():
+    # torchvisionの事前学習済みResNet50モデルを使用
     return models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
 
 class VQAModel(nn.Module):
     def __init__(self, vocab_size: int, n_answer: int):
         super().__init__()
+        # 画像特徴抽出のためにResNet50を使用
         self.resnet = ResNet50()
-
         num_ftrs = self.resnet.fc.in_features
-        
+        # ResNetの最終FC層を無効化
         self.resnet.fc = nn.Identity()
 
+        # 特徴マップをベクトルに変換するためにAdaptiveAvgPool2d層を追加
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        
+
+        # テキストエンコーダをResNetの出力特徴量数に合わせる
         self.text_encoder = nn.Linear(vocab_size, num_ftrs)
 
         self.fc = nn.Sequential(
@@ -197,14 +200,14 @@ class VQAModel(nn.Module):
             nn.Linear(512, n_answer)
         )
 
-        # Only train the head of the image encoder
+        # 画像エンコーダのヘッドのみを訓練
         for name, param in self.resnet.named_parameters():
             if "head" in name:
                 param.requires_grad = True
             else:
                 param.requires_grad = False
 
-        # Only train the pooler of the text encoder
+        # テキストエンコーダのプーラーのみを訓練
         for name, param in self.text_encoder.named_parameters():
             if "pooler" in name:
                 param.requires_grad = True
