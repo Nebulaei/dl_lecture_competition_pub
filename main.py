@@ -175,7 +175,6 @@ def VQA_criterion(batch_pred: torch.Tensor, batch_answers: torch.Tensor):
 # 3. モデルのの実装
 # ResNetを利用できるようにしておく
 def ResNet50():
-    # return ResNet(BottleneckBlock, [3, 4, 6, 3])
     return models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
 
